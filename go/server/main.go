@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	//"fmt"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	//"time"
-	//"os"
-	//"strconv"
+	"os"
+	"strconv"
 	"unsafe"
 
 	vosk "github.com/cyhkelvin/voskgo_rule/go"
@@ -48,11 +48,16 @@ func check(err error, msg string) bool {
 }
 
 func main() {
+	// init parameters
+	Port := fmt.Sprintf(":%s", os.Args[1])
+	sampleRate, err := strconv.ParseFloat(os.Args[2], 64)
+	if check(err, "[asr-server] error: sample rate setting wrong! use default: 8000.0"){
+		sampleRate=8000.0
+	}
 	// initial model and recognizer
 	model, err := vosk.NewModel("model")
 	_ = check(err, "[asr-server] error: model loading error!")
 
-	sampleRate := 8000.0 //16000.0
 	rec, err := vosk.NewRecognizer(model, sampleRate)
 	_ = check(err, "[asr-server] error: reconizer init error!")
 	rec.SetWords(1)
@@ -106,6 +111,6 @@ func main() {
 		err = c.WriteMessage(1, []byte("{\"msg\": \"ENDDD\"}"))
 		_ = check(err, "[asr-server] end error")
 	})
-	log.Println("server start at :8900")
-	log.Fatal(http.ListenAndServe(":8900", nil))
+	log.Println("server start at ", Port)
+	log.Fatal(http.ListenAndServe(Port, nil))
 }
