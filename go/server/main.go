@@ -47,20 +47,20 @@ func check(err error, msg string) bool {
 	return false
 }
 
+func RecognizeRoutine(model *vosk.VoskModel, sampleRate float64) {
+
+}
+
 func main() {
 	// init parameters
 	Port := fmt.Sprintf(":%s", os.Args[1])
 	sampleRate, err := strconv.ParseFloat(os.Args[2], 64)
-	if check(err, "[asr-server] error: sample rate setting wrong! use default: 8000.0"){
-		sampleRate=8000.0
+	if check(err, "[asr-server] error: sample rate setting wrong! use default: 8000.0") {
+		sampleRate = 8000.0
 	}
 	// initial model and recognizer
 	model, err := vosk.NewModel("model")
 	_ = check(err, "[asr-server] error: model loading error!")
-
-	rec, err := vosk.NewRecognizer(model, sampleRate)
-	_ = check(err, "[asr-server] error: reconizer init error!")
-	rec.SetWords(1)
 
 	upgrader := &websocket.Upgrader{
 		//如果有 cross domain 的需求，可加入這個，不檢查 cross domain
@@ -76,6 +76,11 @@ func main() {
 			log.Println("disconnect !!")
 			c.Close()
 		}()
+
+		rec, err := vosk.NewRecognizer(model, sampleRate)
+		_ = check(err, "[asr-server] error: recognizer init error!")
+		rec.SetWords(1)
+
 		params := r.URL.Query()
 		session_id := params.Get("id")
 		log.Printf("receive: %s\n", session_id)
@@ -84,7 +89,6 @@ func main() {
 			if check(err, "[asr-server] read error!") {
 				break
 			}
-
 			if rec.AcceptWaveform(msg) != 0 {
 				wb_msg := gen_wb_msg(rec.Result())
 				log.Printf("reconize: %s\n", wb_msg)
@@ -93,11 +97,6 @@ func main() {
 				break
 			}
 			log.Printf("receive size: %d\n", unsafe.Sizeof(msg))
-			//log.Printf("receive: %s\n", msg)
-			//err = c.WriteMessage(mtype, msg)
-			//if check(err, "[asr-server] write error!"){
-			//	break
-			//}
 
 			if bytes.Equal(msg, []byte("{\"eof\" : 1}")) {
 				break
