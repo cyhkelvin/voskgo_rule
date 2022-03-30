@@ -47,10 +47,6 @@ func check(err error, msg string) bool {
 	return false
 }
 
-func RecognizeRoutine(model *vosk.VoskModel, sampleRate float64) {
-
-}
-
 func main() {
 	// init parameters
 	Port := fmt.Sprintf(":%s", os.Args[1])
